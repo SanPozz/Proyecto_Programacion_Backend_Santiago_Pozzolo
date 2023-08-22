@@ -9,7 +9,7 @@ export class ProductManager {
 
     async getProducts() {
         this.products = JSON.parse(await fs.readFile(this.path, 'utf-8'));
-        console.log(this.products);
+        // console.log(this.products);
         return this.products
     }
 
@@ -19,7 +19,7 @@ export class ProductManager {
 
             const { title, description, price, code, status, stock, category, thumbnail} = product;
 
-            if (!title || !description || !price || !code || !status || !stock || !category) {
+            if (!title || !description || !price || !code || !stock || !category) {
                 return 1
             }
     
@@ -27,6 +27,7 @@ export class ProductManager {
                 return 2
             } else {
                 product.id = this.products.length + 1;
+                product.status = true;
 
                 this.products.push(product);
 
