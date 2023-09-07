@@ -1,11 +1,17 @@
 <h1>Productos</h1>
 
 {{#if productsLength}}
-    {{#each products}}
+    <div>
+        {{products}}
+    </div>
+    {{!-- {{#each products}}
         <div>
-            <p>{{this.title}} - {{this.description}} - {{this.price}} - {{this.code}} - {{this.status}} - {{this.stock}} - {{this.category}} - {{this.id}}</p>
+            <p>{{this._id.toString}} - {{this.title}} - {{this.description}} - {{this.price}} - {{this.stock}} - {{this.category}} - {{this.status}} - {{this.code}}</p>
         </div>
-    {{/each}}
+    {{/each}} --}}
+
+    {{!--! NO PUEDO ENTRAR A LOS ATRIBUTOS DE CADA OBJETO POR HTTP! --}}
+    
 {{else}}
     <h3>No existe ningun producto</h3>
 {{/if}}

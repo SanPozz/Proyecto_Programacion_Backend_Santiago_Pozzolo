@@ -1,35 +1,97 @@
 import { Router } from "express";
-import { CartsManager } from "../controllers/cartsManager.js";
+// import { CartsManager } from "../controllers/cartsManager.js";
+import cartModel from "../dao/models/carts.models.js";
+import productModel from "../dao/models/products.models.js";
 
 const routerCarts = Router();
-const cartsManager = new CartsManager('./src/models/carts.json', './src/models/products.json')
+// const cartsManager = new CartsManager('./src/models/carts.json', './src/models/products.json')
+
+// routerCarts.post('/', async (req, res) => {
+//     const cartCreated = await cartModel.create({})
+//     res.status(200).send({ status: "Cart Created" + cartCreated })
+// })
+
+// routerCarts.get('/:cid', async (req, res) => {
+//     const { cid } = req.params
+//     const products = await cartsManager.getProductsByCart(parseInt(cid))
+
+//     if (products) {
+//         res.status(200).send(products)
+//     } else {
+//         res.status(400).send("Carrito inexistente")
+//     }
+// })
+
+// routerCarts.post('/:cid/products/:pid', async (req, res) => {
+//     const { cid, pid } = req.params;
+
+//     const status = await cartsManager.addProductToCart(parseInt(cid), parseInt(pid))
+
+//     if (status) {
+//         res.status(200).send(`El producto con id: ${pid} fue agregado correctamnte a el carrito con id ${cid}`)
+//     } else {
+//         res.status(400).send("El carrito o el producto son inexistentes")
+//     }
+// })
 
 routerCarts.post('/', async (req, res) => {
-    await cartsManager.createCart();
-    res.status(200).send("El carrito se ha creado correctamente")
+    try {
+        const cartCreated = await cartModel.create({})
+        res.status(200).send({ status: "Cart Created" + cartCreated })
+    } catch (error) {
+        res.status(400).send({ status: "Error creating cart: " + error })
+    }
+    
 })
 
 routerCarts.get('/:cid', async (req, res) => {
     const { cid } = req.params
-    const products = await cartsManager.getProductsByCart(parseInt(cid))
 
-    if (products) {
-        res.status(200).send(products)
-    } else {
-        res.status(400).send("Carrito inexistente")
+    try {
+
+        const cart = await cartModel.findById(cid)
+
+        if (cart) {
+            res.status(200).send({ status: "OK", result: cart })
+        } else {
+            res.status(400).send({ status: "Cart Not Found" })
+        }
+
+    } catch (error) {
+        res.status(400).send({ status: "Error consulting database" + error})
     }
+    
 })
 
-routerCarts.post('/:cid/products/:pid', async (req, res) => {
+routerCarts.put('/:cid/products/:pid', async (req, res) => {
     const { cid, pid } = req.params;
 
-    const status = await cartsManager.addProductToCart(parseInt(cid), parseInt(pid))
+    try {
 
-    if (status) {
-        res.status(200).send(`El producto con id: ${pid} fue agregado correctamnte a el carrito con id ${cid}`)
-    } else {
-        res.status(400).send("El carrito o el producto son inexistentes")
+        const cart = await cartModel.findById(cid);
+        const product = await productModel.findById(pid);
+        
+        if (!product) {
+            res.status(400).send({ status: "Product Not Found" });
+            return
+        } else if (!cart) {
+            res.status(400).send({ status: "Cart Not Found" });
+            return
+        } else {
+            const productExist = cart.products.find(product => product.id_prod == pid)
+            
+            productExist
+            ? productExist.quantity++
+            : cart.products.push({ id_prod: product._id, quantity: 1 });
+            await cart.save();
+            res.status(200).send({ status: `Product: ${product} Added to Cart: ${cart}` })
+        }
+
+    } catch (error) {
+        res.status(400).send({ status: `Error adding product to cart` });
     }
+
+
 })
 
 export default routerCarts;

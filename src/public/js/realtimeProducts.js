@@ -18,7 +18,7 @@ socket.on('sentProducts', products => {
     products.forEach(prod => {
         containerProducts.innerHTML += `
         <div class="product-item">
-            <p>ID: ${prod.id}</p>
+            <p>ID: ${prod._id.toString()}</p>
             <p>Title: ${prod.title}</p>
             <p>Description: ${prod.description}</p>
             <p>Price: ${prod.price}</p>
@@ -26,7 +26,7 @@ socket.on('sentProducts', products => {
             <p>Stock: ${prod.stock}</p>
             <p>Category: ${prod.category}</p>
             <p>Status: ${prod.status}</p>
-            <button class="buttonDeleteProduct" data-id="${prod.id}">Eliminar Producto</button>
+            <button class="buttonDeleteProduct" data-id="${prod._id.toString()}">Eliminar Producto</button>
         </div>
         `
     });
@@ -34,6 +34,6 @@ socket.on('sentProducts', products => {
 
 containerProducts.addEventListener("click", function(event) {
     if (event.target.classList.contains("buttonDeleteProduct")) {
-        let productIdDelete = parseInt(event.target.dataset.id);
+        let productIdDelete = event.target.dataset.id;
         socket.emit('productToDelete', productIdDelete)
     }})
