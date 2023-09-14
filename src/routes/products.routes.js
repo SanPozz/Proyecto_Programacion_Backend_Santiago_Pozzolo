@@ -67,17 +67,25 @@ const routerProducts = Router();
 // })
 
 routerProducts.get('/', async (req,res) => {
-    const { limit } = req.query;
+    const { limit, page, category, status, sort } = req.query;
+
+    const query = {}
+    category && (query.category = category)
+    status && (query.status = status)
+
+    
+    const sortBy = sort == 'asc' ? 1 : sort == 'desc' ? -1 : null;
+
+    const options = {
+        limit: limit || 10,
+        page: page || 1,
+        sort: { price: sortBy}
+    }
 
     try {
 
-        if (limit) {
-            const productos = await productModel.find().limit(limit);
-            res.status(200).send({status: "OK", result: productos});
-        } else {
-            const productos = await productModel.find();
-            res.status(200).send({status: "OK", result: productos});
-        }
+        const products = await productModel.paginate(query, options)
+        res.status(200).send({status: 'OK', products})
 
     } catch (error) {
         res.status(400).send({error: `Error al consultar la base de datos: ${error}`});

@@ -36,39 +36,19 @@ const routerCarts = Router();
 
 routerCarts.post('/', async (req, res) => {
     try {
-        const cartCreated = await cartModel.create({})
-        res.status(200).send({ status: "Cart Created" + cartCreated })
+        const cartCreated = await cartModel.create({});
+        res.status(200).send({ status: "Cart Created" + cartCreated });
     } catch (error) {
-        res.status(400).send({ status: "Error creating cart: " + error })
+        res.status(400).send({ status: "Error creating cart: " + error });
     }
     
 })
-
-routerCarts.get('/:cid', async (req, res) => {
-    const { cid } = req.params
-
-    try {
-
-        const cart = await cartModel.findById(cid)
-
-        if (cart) {
-            res.status(200).send({ status: "OK", result: cart })
-        } else {
-            res.status(400).send({ status: "Cart Not Found" })
-        }
-
-    } catch (error) {
-        res.status(400).send({ status: "Error consulting database" + error})
-    }
-    
-})
-
-routerCarts.put('/:cid/products/:pid', async (req, res) => {
+routerCarts.post('/:cid/products/:pid', async (req, res) => {
     const { cid, pid } = req.params;
 
     try {
 
-        const cart = await cartModel.findById(cid);
+        const cart = await cartModel.findById(cid).populate('products');
         const product = await productModel.findById(pid);
         
         if (!product) {
@@ -91,7 +71,95 @@ routerCarts.put('/:cid/products/:pid', async (req, res) => {
         res.status(400).send({ status: `Error adding product to cart` });
     }
 
+})
 
+routerCarts.get('/:cid', async (req, res) => {
+    const { cid } = req.params;
+
+    try {
+
+        const cart = await cartModel.findById(cid).populate('products');
+
+        if (cart) {
+            res.status(200).send({ status: "OK", result: cart });
+        } else {
+            res.status(400).send({ status: "Cart Not Found" });
+        }
+
+    } catch (error) {
+        res.status(400).send({ status: "Error consulting database" + error});
+    }
+    
+})
+
+routerCarts.put('/:cid', async (req, res) => {
+
+    const { cid } = req.params;
+    const { dataToUpdate } = req.body;
+
+    try {
+
+        const cart = await cartModel.findByIdAndUpdate(
+            cid,
+            {$set: dataToUpdate},
+            {new: true});
+
+        if (cart) {
+            res.status(200).send({ status: "OK", result: cart });
+        } else {
+            res.status(400).send({ status: "Cart Not Found" });
+        }
+
+    } catch (error) {
+        res.status(400).send({ status: `Error: ${error}` });
+    }
+})
+
+routerCarts.put('/:cid/products/:pid', async (req, res) => {
+    const { cid, pid } = req.params;
+    const { quantity } = req.body;
+
+    try {
+        
+        const cart = await cartModel.findById(cid);
+        let productToUpdate = cart.products.find(prod => prod.id_prod == pid);
+
+        productToUpdate.quantity = quantity;
+        await cart.save();
+        res.status(200).send({ status: "OK" , productToUpdate});
+
+    } catch (error) {
+        res.status(400).send({ status: `Error: ${error}` });
+    }
+})
+
+routerCarts.delete('/:cid', async (req, res) => {
+    try {
+        const cart = await cartModel.findById(cid);
+        cart.products = []
+        await cart.save()
+    } catch (error) {
+        res.status(400).send({ status: `Error: ${error}` });
+    }
+})
+
+routerCarts.delete('/:cid/products/:pid', async (req, res) => {
+    const { cid, pid } = req.params;
+
+    try {
+
+        const cart = await cartModel.findById(cid);
+
+        if (cart) {
+            const productsFiltered = cart.products.filter(prod => prod.id_prod != pid);
+            cart.products = productsFiltered;
+            await cart.save()
+            res.status(200).send({ status: `Product with ${pid} was deleted` })
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
 })
 
 export default routerCarts;
